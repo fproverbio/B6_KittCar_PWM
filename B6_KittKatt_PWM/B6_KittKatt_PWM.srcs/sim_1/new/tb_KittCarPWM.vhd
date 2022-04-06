@@ -4,7 +4,6 @@ use IEEE.STD_LOGIC_1164.all;
 use IEEE.NUMERIC_STD.ALL;
 ------------------------------------
 
-
 entity tb_KittCarPWM is
 end tb_KittCarPWM;
 
@@ -110,5 +109,7 @@ begin
     wait;
     
   end process;
+
+  clk <= not clk after CLK_PERIOD/2;
 
 end;
