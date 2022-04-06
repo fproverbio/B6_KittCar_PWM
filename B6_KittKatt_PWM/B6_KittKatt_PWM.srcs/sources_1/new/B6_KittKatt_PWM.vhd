@@ -38,15 +38,18 @@ end KittCarPWM;
 architecture Behavioral of KittCarPWM is
 
   component PulseWidthModulator is
+
     Generic(
       
       BIT_LENGTH	:	INTEGER	RANGE	1 TO 16 := TAIL_LENGTH;	-- Bit used  inside PWM
       
-      T_ON_INIT	:	POSITIVE	:= 64;				-- Init of Ton
-      PERIOD_INIT	:	POSITIVE	:= 128;				-- Init of Period
+      T_ON_INIT	        :	POSITIVE	        := 64;	        -- Init of Ton
+      PERIOD_INIT	:	POSITIVE	        := 128;		-- Init of Period
       
-      PWM_INIT	:	STD_LOGIC:= '1'					-- Init of PWM
+      PWM_INIT	        :	STD_LOGIC:= '1'				-- Init of PWM
+
       );
+
     Port ( 
       
       ------- Reset/Clock --------
@@ -62,10 +65,9 @@ architecture Behavioral of KittCarPWM is
       ----------------------------		
       
       );
+    
   end component;
   
-  
-
   signal STEP 		: UNSIGNED (63 DOWNTO 0):= to_unsigned(MIN_KITT_CAR_STEP_MS, 32)*to_unsigned(1000000, 32);
   signal counter_ns  	: unsigned (63 downto 0) := (Others => '0');
   
@@ -73,30 +75,30 @@ architecture Behavioral of KittCarPWM is
 
   
   type Ton_mat is array(NUM_OF_LEDS-1 DOWNTO 0) of unsigned(TAIL_LENGTH-1 DOWNTO 0);
-  signal Ton : Ton_mat:= (Others =>(Others => '0'));
+  signal Ton            : Ton_mat:= (Others =>(Others => '0'));
   
   signal KITT_REG	:   std_logic_vector(NUM_OF_LEDS-1 DOWNTO 0):=(OTHERS =>'0');
-  signal zeros : unsigned(TAIL_LENGTH-1 DOWNTO 0) := (OTHERS => '0');
-  signal LEDS_REG : std_logic_vector(NUM_OF_LEDS-1 DOWNTO 0) := KITT_REG;
+  signal zeros          : unsigned(TAIL_LENGTH-1 DOWNTO 0) := (OTHERS => '0');
+  signal LEDS_REG       : std_logic_vector(NUM_OF_LEDS-1 DOWNTO 0) := KITT_REG;
 
 begin
 
-  --create pwm--
   PWM_loop: for I in 0 to NUM_OF_LEDS-1 generate
     
     PWM_inst: PulseWidthModulator
+
       Port Map ( 
         
         ------- Reset/Clock --------
         reset	=> reset,
-        clk		=> clk,
+        clk	=> clk,
         ----------------------------		
 
         -------- Duty Cycle ----------
-        Ton		=> std_logic_vector(Ton(I)),			
+        Ton	=> std_logic_vector(Ton(I)),			
         Period	=> Period,	
         
-        PWM		=> KITT_REG(I)		
+        PWM	=> KITT_REG(I)		
         ----------------------------		
         
         );
@@ -105,32 +107,34 @@ begin
 
   LEDS <= KITT_REG;
   
-  
   STEP <= UNSIGNED(SW)*to_unsigned(MIN_KITT_CAR_STEP_MS, 24)*to_unsigned(1000000, 24);
-  
-
-  
+    
   ---- Combination logic to switch the LED  ----
   process(clk)
     
     variable direction : std_logic_vector(NUM_OF_LEDS-1 DOWNTO 0) := (Others => '0'); ---- IF '0' => MOVE LEFT || IF '1' => MOVE RIGHT ----
     
   begin
+
     if rising_edge(clk) then
       
       counter_ns <= counter_ns+CLK_PERIOD_NS;
-      
-      
+            
       if reset = '1' then
         
         direction := (Others => '0');
         counter_ns <= (Others => '0');
         
         for I in 0 to NUM_OF_LEDS-1 loop
+
           if (I<TAIL_LENGTH) then
+
             Ton(I) <= to_unsigned(I+1, TAIL_LENGTH);
+
           else
+
             Ton(I)<= (Others => '0');
+
           end if;
           
         end loop;
@@ -151,10 +155,10 @@ begin
 
               Ton(0)<= (Others => '0');
               
-              if Ton(NUM_OF_LEDS-1)=TAIL_LENGTH then
-              --direction(j):= not direction(j);
-              --logic that changes directions of ton on the left
-              end if;
+              -- if Ton(NUM_OF_LEDS-1)=TAIL_LENGTH then
+              -- --direction(j):= not direction(j);
+              -- --logic that changes directions of ton on the left
+              -- end if;
               
               
             elsif direction(j) = '1' then
@@ -163,9 +167,9 @@ begin
 
               Ton(NUM_OF_LEDS-1) <= (Others =>'0');
               
-              if Ton(0)=TAIL_LENGTH then
-                                        --direction(j):= not direction(j); 	--logic that changes directions of ton on the right
-              end if;
+              -- if Ton(0)=TAIL_LENGTH then
+              --                           --direction(j):= not direction(j); 	--logic that changes directions of ton on the right
+              -- end if;
               
             end if;
             
