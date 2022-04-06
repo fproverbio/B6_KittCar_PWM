@@ -5,6 +5,7 @@ use IEEE.NUMERIC_STD.ALL;
 ------------------------------------
 
 entity KittCarPWM is
+
   Generic (
 
     CLK_PERIOD_NS			:	POSITIVE	RANGE	1	TO	100     := 10;
@@ -108,7 +109,7 @@ begin
   LEDS <= KITT_REG;
   
   STEP <= UNSIGNED(SW)*to_unsigned(MIN_KITT_CAR_STEP_MS, 24)*to_unsigned(1000000, 24);
-    
+  
   ---- Combination logic to switch the LED  ----
   process(clk)
     
@@ -119,7 +120,7 @@ begin
     if rising_edge(clk) then
       
       counter_ns <= counter_ns+CLK_PERIOD_NS;
-            
+      
       if reset = '1' then
         
         direction := (Others => '0');
@@ -152,7 +153,6 @@ begin
             if direction(j) = '0' then
               
               Ton(j+1)<=Ton(j);
-
               Ton(0)<= (Others => '0');
               
               -- if Ton(NUM_OF_LEDS-1)=TAIL_LENGTH then
