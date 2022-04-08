@@ -45,22 +45,22 @@ architecture Behavioral of KittCarPWM is
       T_ON_INIT	        :	POSITIVE	        := 64;	        -- Init of Ton
       PERIOD_INIT	:	POSITIVE	        := 128;		-- Init of Period
       
-      PWM_INIT	        :	STD_LOGIC:= '1'				-- Init of PWM
+      PWM_INIT	        :	STD_LOGIC               := '1'		-- Init of PWM
 
       );
 
     Port ( 
       
       ------- Reset/Clock --------
-      reset	:	IN	STD_LOGIC;
+      reset	        :	IN	STD_LOGIC;
       clk		:	IN	STD_LOGIC;
       ----------------------------		
 
       -------- Duty Cycle ----------
       Ton		:	IN	STD_LOGIC_VECTOR(BIT_LENGTH-1 downto 0);	-- clk at PWM = '1'
-      Period	:	IN	STD_LOGIC_VECTOR(BIT_LENGTH-1 downto 0);	-- clk per period of PWM
+      Period	        :	IN	STD_LOGIC_VECTOR(BIT_LENGTH-1 downto 0);	-- clk per period of PWM
       
-      PWM		:	OUT	STD_LOGIC		-- PWM signal
+      PWM		:	OUT	STD_LOGIC		                        -- PWM signal
       ----------------------------		
       
       );
@@ -79,7 +79,6 @@ architecture Behavioral of KittCarPWM is
   signal Ton_reg2 : Ton_mat :=(Others =>(Others => '0'));
   
   signal direction	: std_logic := '0';
-  
   
   signal KITT_REG	:   std_logic_vector(NUM_OF_LEDS-1 DOWNTO 0):=(OTHERS =>'0');
   signal zeros : unsigned(TAIL_LENGTH-1 DOWNTO 0) := (OTHERS => '0');
@@ -110,10 +109,11 @@ begin
   end generate;
 
   LEDS <= KITT_REG;
-  
-  STEP <= UNSIGNED(SW)*to_unsigned(MIN_KITT_CAR_STEP_MS, 24)*to_unsigned(1000000, 24);
-  
+
+  STEP <= (UNSIGNED(SW))*to_unsigned(MIN_KITT_CAR_STEP_MS, 24)*to_unsigned(1000000, 24);
+
   Ton_decision: process(clk)
+
   begin
     
     if rising_edge(clk) then
@@ -121,23 +121,22 @@ begin
       for j in 0 to NUM_OF_LEDS-1 loop
         
         if Ton_reg1(j)>Ton_reg2(j) then
-          Ton(j)<=Ton_reg1(j);
+
+          Ton(j) <= Ton_reg1(j);
+
         else
-          Ton(j)<=Ton_reg2(j);
+
+          Ton(j) <= Ton_reg2(j);
+          
         end if;
+
       end loop;
-      
       
     end if;
     
   end process;
   
-
-  
-  ---- Combination logic to switch the LED  ----
   process(clk)
-    
-    
     
   begin
 
@@ -157,10 +156,12 @@ begin
             Ton_reg1(I) <= to_unsigned(I+1, TAIL_LENGTH);
 
           else
-            
+
             Ton_reg1(I) <= (Others => '0');
 
           end if;
+
+          Ton_reg2(I) <= (Others => '0');
 
         end loop;
 
@@ -173,41 +174,55 @@ begin
           for j in 0 to NUM_OF_LEDS-2 loop
             
             if direction = '0' then
-              
-              Ton_reg1(j+1) <= Ton_reg1(j);
-              Ton_reg1(0)   <= (Others => '0');
-              
-              if Ton_reg1(NUM_OF_LEDS-1) /=0 then
-                                
+
+              Ton_reg1(j+1)     <= Ton_reg1(j);
+              Ton_reg1(0)       <= (Others => '0');
+
+              if Ton_reg1(NUM_OF_LEDS-1)/=0 then
+
                 Ton_reg2(j)             <= Ton_reg2(j+1);
                 Ton_reg2(NUM_OF_LEDS-2) <= Ton_reg1(NUM_OF_LEDS-1);
-                
-                if Ton_reg1(NUM_OF_LEDS-1)=1 then
-                  
-                  direction <= '1';
+                Ton_reg2(NUM_OF_LEDS-1) <= Ton_reg1(NUM_OF_LEDS-2);
 
-                end if;
-                
+                if Ton_reg1(NUM_OF_LEDS-1)=1 then
+
+                  if TAIL_LENGTH=16 then
+
+                    Ton_reg1(1) <= TO_UNSIGNED(TAIL_LENGTH, TAIL_LENGTH);
+
+                  end if;
+
+                  direction<='1';
+
+                end if;						
+
               end if;
               
             end if;	
             
             if direction = '1' then
-              
-              Ton_reg2(j)               <= Ton_reg2(j+1);
-              Ton_reg2(NUM_OF_LEDS-1)   <= (Others=> '0');
-              
+
+              Ton_reg2(j) <= Ton_reg2(j+1);
+              Ton_reg2(NUM_OF_LEDS-1) <= (Others=> '0');
+
               if Ton_reg2(0) /= 0 then
-                
-                Ton_reg1(j+1) <= Ton_reg1(j);
-                Ton_reg1(1)   <= Ton_reg2(0);
-                
+
+                Ton_reg1(j+1)   <= Ton_reg1(j);
+                Ton_reg1(1)     <= Ton_reg2(0);
+                Ton_reg1(0)     <= Ton_reg2(1);
+
                 if Ton_reg2(0) = 1 then
+
+                  if (TAIL_LENGTH=16) then
+
+                    Ton_reg2(NUM_OF_LEDS-2)<=TO_UNSIGNED(TAIL_LENGTH, TAIL_LENGTH);
+
+                  end if;
 
                   direction<='0';
                   
                 end if;
-                
+
               end if;
               
             end if;
@@ -219,7 +234,7 @@ begin
       end if;
 
     end if;
-
+    
   end process;
 
 end Behavioral;
